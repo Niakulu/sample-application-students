@@ -13,7 +13,7 @@ jobs:
     before_script:
     - cd sample-application-backend
     script:
-    - mvn clean verify
+    - mvn clean verify org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar -D sonar.projectKey=Niakulu_sample-application-students
   - stage: "Build and Test"
     language: node_js
     node_js: "12.20"
@@ -41,3 +41,8 @@ cache:
 
 services:
 - docker
+
+addons:
+  sonarcloud:
+    organization: "Niakulu"
+    token: "$SONARCLOUD_TOKEN"
