@@ -1,6 +1,11 @@
 git:
   depth: 5
 
+addons:
+  sonarcloud:
+    organization: "sfireinc"
+    token: "$SONARCLOUD_TOKEN"
+
 stages:
   - "Build and Test"
   - "Package"
@@ -13,25 +18,39 @@ jobs:
     before_script:
     - cd sample-application-backend
     script:
-    - mvn clean verify org.jacoco:jacoco-maven-plugin:prepare-agent install sonar:sonar -Dsonar.projectKey=Niakulu_sample-application-students
+    - mvn clean
+    - mvn verify
+
+  - stage: "Quality Gate [Sonar Cloud]"
+    language: java
+    jdk: oraclejdk11
+    before_script:
+    - cd sample-application-backend
+    script:
+    - mvn test
+    - mvn org.jacoco:jacoco-maven-plugin:prepare-agent 
+    - mvn sonar:sonar -Dsonar.projectKey=Niakulu_sample-application-students
+
   - stage: "Build and Test"
     language: node_js
     node_js: "12.20"
     before_script:
     - cd sample-application-frontend
-  - stage: "Package"
+
+  - stage: "Build Push BackEnd docker image"
     before_script:
     - cd sample-application-backend
     script:
     - docker build -t niakulu/devops:backend .
-    - docker login -p $DOCKER_PASS -u $DOCKER_USER
+    - docker login -p $DOCKER_PASSWORD -u $DOCKER_USER
     - docker push niakulu/devops:backend
-  - stage: "Package"
+    
+  - stage: "Build Push FrontEnd docker image"
     before_script:
     - cd sample-application-frontend
     script:
     - docker build -t niakulu/devops:frontend .
-    - docker login -p $DOCKER_PASS -u $DOCKER_USER
+    - docker login -p $DOCKER_PASSWORD -u $DOCKER_USER
     - docker push niakulu/devops:frontend
 
 cache:
@@ -41,8 +60,3 @@ cache:
 
 services:
 - docker
-
-addons:
-  sonarcloud:
-    organization: "Niakulu"
-    token: "$SONARCLOUD_TOKEN"
